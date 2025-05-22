@@ -4,7 +4,7 @@ const upload = require('../config/multer'); // multer setup with cloudinary stor
 const  authMiddleware = require('../middlewares/auth'); // Assuming you have an auth middleware
 const fileModel = require('../models/file.model'); // Assuming you have a file model
 // GET home page
-router.get('/', authMiddleware,async(req, res) => {
+router.get('/home', authMiddleware,async(req, res) => {
     const userfiles= await fileModel.find({user:req.user._id});
     console.log(userfiles);
 
