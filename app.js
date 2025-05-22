@@ -15,7 +15,7 @@ app.use(express.urlencoded({extended:true}));
 
 
 const userRouter=require('./routes/user.routes');
-app.use('/',indexRouter);
+app.use('/', indexRouter);
 
 app.use('/user',userRouter);
 

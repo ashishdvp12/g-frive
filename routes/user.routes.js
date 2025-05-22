@@ -72,7 +72,7 @@ router.post('/login',
 
     }, process.env.JWT_SECRET, {expiresIn:'1h'});
     res.cookie('token', token) 
-         res.send("logged in")
+        res.redirect('/home');
 }
 )
 
