@@ -27,10 +27,7 @@ router.post('/upload-file', authMiddleware, upload.single('file'), async (req, r
 
 
 
-  res.json({
-    file,
-    message: "File uploaded successfully"
-  });
+  res.redirect('/home')
 });
 router.get('/download/:filename', authMiddleware, async (req, res) => {
   try {
