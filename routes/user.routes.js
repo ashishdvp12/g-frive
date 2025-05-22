@@ -1,64 +1,79 @@
-const express = require('express');
-const router = express.Router();
-const upload = require('../config/multer'); // multer setup with cloudinary storage
-const  authMiddleware = require('../middlewares/auth'); // Assuming you have an auth middleware
-const fileModel = require('../models/file.model'); // Assuming you have a file model
-// GET home page
-router.get('/', (req, res) => {
-  res.render('index');
-});
-router.get('/home', authMiddleware,async(req, res) => {
-    const userfiles= await fileModel.find({user:req.user._id});
-    console.log(userfiles);
+const express=require('express');
+const router=express.Router();
+const userModel=require('../models/user.model');
 
-  res.render('home', {
-    files: userfiles,
-  });
-});
+const { body, validationResult} = require('express-validator');
 
-// POST upload route
-router.post('/upload-file', authMiddleware, upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
- const file = await fileModel.create({
-  url: req.file.path,              // <-- this is the Cloudinary URL
-  filename: req.file.originalname, // or req.file.filename
-  user: req.user._id,
-});
 
- res.redirect('/home');
-
-  // res.json({
-  //   file,
-  //   message: "File uploaded successfully"
-  // });
-});
-router.get('/download/:filename', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const filename = decodeURIComponent(req.params.filename);
-
-    const file = await fileModel.findOne({ filename, user: userId });
-
-    if (!file || !file.url) {
-      return res.status(404).json({ message: "File not found or missing URL" });
+router.get('/register',
+    
+     (req, res) => {
+    res.render('register');
+})
+router.post('/register',body('email').trim().isEmail(),
+    body('username').trim().isLength({min:3}),
+    body('password').trim().isLength({min:5}), async (req, res) => {
+    const errors=validationResult(req);
+    if(!errors.isEmpty()){
+        console.log(errors);
+       return res.status(400).json({
+        errors: errors.array(),
+        message:"invalid data"
+       });
+        
     }
+    const {username, email, password}=req.body;
+    const hashedPassword=await bcrypt.hash(password, 10);
+    const newUser= await userModel.create({
+        username,
+        email,
+        password:hashedPassword
+    });
 
-    // Modify the URL for download
-    const downloadUrl = file.url.replace('/upload/', '/upload/fl_attachment/');
+res.redirect('/user/login');
+})
 
-    // Redirect to download URL
-    return res.redirect(downloadUrl);
+router.get('/login', (req, res) => {
+    res.render('login');
+})
+router.post('/login',
+    body('username').trim().isLength({min:5}),
+    body('password').trim().isLength({min:5}),
+    async (req, res) => {
+    const errors=validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({
+            error: errors.array(),
+            message:"invalid data"
+        });
+    }
+    const {username, password}=req.body;
+    const user=await userModel.findOne({username});
+    if(!user){
+        return res.status(400).json({
+            message:"invalid username or password"
+        });
+    }
+    const isMatch=await bcrypt.compare(password, user.password);
+    if(!isMatch){
+        return res.status(400).json({
+            message:"invalid username or password"
+        })
+        
+    }
+    const token=jwt.sign({userId:user._id,
+        username:user.username,
+        email:user.email,
+        
 
-  } catch (error) {
-    console.error("Download error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
 
+    }, process.env.JWT_SECRET, {expiresIn:'1h'});
+    res.cookie('token', token) 
+        res.redirect('/home');
+}
+)
 
-
-
-module.exports = router;
+module.exports=router;
