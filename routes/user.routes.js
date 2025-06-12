@@ -33,7 +33,7 @@ router.post('/register',body('email').trim().isEmail(),
         password:hashedPassword
     });
 
-res.json(newUser);
+res.redirect('/user/login');
 })
 
 router.get('/login', (req, res) => {
