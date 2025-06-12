@@ -4,9 +4,17 @@ const upload = require('../config/multer'); // multer setup with cloudinary stor
 const  authMiddleware = require('../middlewares/auth'); // Assuming you have an auth middleware
 const fileModel = require('../models/file.model'); // Assuming you have a file model
 // GET home page
+<<<<<<< HEAD
 router.get('/', (req, res) => {
   res.render('index');
 });
+=======
+
+router.get('/', (req, res) => {
+  res.render('index');
+});
+
+>>>>>>> 2a382ca8b7e980b35e321b8a76d4cebc4f432109
 router.get('/home', authMiddleware,async(req, res) => {
     const userfiles= await fileModel.find({user:req.user._id});
     console.log(userfiles);
@@ -30,10 +38,15 @@ router.post('/upload-file', authMiddleware, upload.single('file'), async (req, r
 
  res.redirect('/home');
 
+<<<<<<< HEAD
   // res.json({
   //   file,
   //   message: "File uploaded successfully"
   // });
+=======
+
+  res.redirect('/home')
+>>>>>>> 2a382ca8b7e980b35e321b8a76d4cebc4f432109
 });
 router.get('/download/:filename', authMiddleware, async (req, res) => {
   try {
